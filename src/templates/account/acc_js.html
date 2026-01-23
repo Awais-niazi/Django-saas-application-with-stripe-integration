@@ -1,0 +1,84 @@
+<script>
+            // Password toggle functionality
+            const togglePassword = document.getElementById('toggle-password');
+            const passwordField = document.getElementById('password');
+            const eyeClosed = document.getElementById('eye-closed');
+            const eyeOpen = document.getElementById('eye-open');
+
+            togglePassword.addEventListener('click', function() {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                
+                eyeClosed.classList.toggle('hidden');
+                eyeOpen.classList.toggle('hidden');
+            });
+
+            // Form submission
+            document.getElementById('signin-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const login = document.getElementById('login').value;
+                const password = document.getElementById('password').value;
+                
+                // Basic validation
+                if (!login || !password) {
+                    showAlert('Please fill in all fields.', 'error');
+                    return;
+                }
+                
+                // Show success message (simulate successful login)
+                showAlert('Sign in successful! Redirecting...', 'success');
+                
+                // In a real application, you would send this data to your backend
+                console.log('Sign in attempted with:', { login, password });
+                
+                // Redirect to home page after a short delay
+                setTimeout(() => {
+                    window.location.href = '/home/';
+                }, 1500);
+            });
+
+            // Alert system
+            function showAlert(message, type = 'info') {
+                const alertContainer = document.getElementById('alert-container');
+                const alertColors = {
+                    'success': 'bg-success text-white',
+                    'error': 'bg-error text-white',
+                    'warning': 'bg-warning text-white',
+                    'info': 'bg-info text-white'
+                };
+                
+                const alertElement = document.createElement('div');
+                alertElement.className = `alert ${alertColors[type]} mb-4 rounded-md shadow-lg`;
+                alertElement.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span><strong>${message}</strong></span>
+                        <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:opacity-75">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                
+                alertContainer.appendChild(alertElement);
+                
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                    if (alertElement.parentElement) {
+                        alertElement.remove();
+                    }
+                }, 5000);
+            }
+
+            // Social login handlers
+            document.querySelectorAll('button[type="button"]').forEach(button => {
+                if (button.id !== 'toggle-password') {
+                    button.addEventListener('click', function() {
+                        const provider = this.textContent.trim();
+                        showAlert(`${provider} login clicked - integrate with your OAuth provider`, 'info');
+                    });
+                }
+            });
+        </script>
+        

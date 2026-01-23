@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+
+{% block layout %}
+<p>Welcome aboard!</p>
+{% csrf_token %}
+
+{% include 'welcome-user-msg.html'%}
+<p>Page Visits: {{ queryset }}</p>
+<p>Total Vists: {{ total_page_count }}</p>
+<p>Percentage of visiting the page: {{ percentage }}</p>
+{% endblock layout %}
