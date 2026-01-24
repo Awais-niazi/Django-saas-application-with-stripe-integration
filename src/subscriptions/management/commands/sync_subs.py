@@ -1,7 +1,7 @@
 from typing import Any
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group, Permission
-from subscriptions.models import Subscriptions
+from subscriptions.models import Subscription
 
 
 class Command(BaseCommand):
@@ -21,7 +21,7 @@ class Command(BaseCommand):
         overwrite = options.get("overwrite")
         sync_from_groups = options.get("sync_from_groups")
 
-        qs = Subscriptions.objects.all()  # <- changed
+        qs = Subscription.objects.all()  # <- changed
 
         if not qs.exists():
             self.stdout.write(self.style.WARNING("No subscriptions found."))

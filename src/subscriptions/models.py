@@ -17,7 +17,7 @@ SUBSCRIPTION_PERMISSIONS = permissions = [
         ]
 # Create your models here.
 
-class Subscriptions(models.Model): 
+class Subscription(models.Model): 
     name = models.CharField(max_length=120)
     active = models.BooleanField(default=True)
     groups = models.ManyToManyField(Group)
@@ -53,7 +53,7 @@ class SubscriptionsPrice(models.Model):
     class IntervalChoices(models.TextChoices):
         MONTHLY = "month", "Monthly"
         YEARLY = "year", "Yearly"
-    subscription = models.ForeignKey(Subscriptions, on_delete=models.SET_NULL, blank=True, null=True)
+    subscription = models.ForeignKey(Subscription, on_delete=models.SET_NULL, blank=True, null=True)
     stripe_id = models.CharField(max_length=120, null=True, blank=True)
     interval = models.CharField(max_length=120, default=IntervalChoices.MONTHLY, choices=IntervalChoices.choices)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=99.99)
@@ -101,7 +101,7 @@ class SubscriptionsPrice(models.Model):
 
 class UserSubscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    subscription = models.ForeignKey(Subscriptions, on_delete=models.SET_NULL, null=True, blank=True)
+    subscription = models.ForeignKey(Subscription, on_delete=models.SET_NULL, null=True, blank=True)
     active = models.BooleanField(default=True)
 
 @receiver(post_save, sender=UserSubscription)
@@ -122,7 +122,7 @@ def user_sub_post_save(sender, instance, *args, **kwargs):
     if not ALLOW_CUSTOM_GROUPS:
         user.groups.set(groups)
     else:
-        subs_qs = Subscriptions.objects.filter(active=True)
+        subs_qs = Subscription.objects.filter(active=True)
         subs_qs = subs_qs.exclude(id=subscription_obj.id)
 
         subs_groups = subs_qs.values_list('groups__id', flat=True)
