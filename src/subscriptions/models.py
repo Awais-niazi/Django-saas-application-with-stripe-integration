@@ -29,11 +29,16 @@ class Subscriptions(models.Model):
         },
     )
     stripe_id = models.CharField(max_length=120, null=True, blank=True)
+    order = models.IntegerField(default=-1, help_text="Ordering on Django pricing page")
+    featured = models.BooleanField(default=True, help_text="Featured on Django pricing page") 
+    updated = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name}"
 
     class Meta:
+        ordering = ['order', 'featured', '-updated']
         permissions = SUBSCRIPTION_PERMISSIONS
 
     def save(self, *args, **kwargs):         
@@ -43,7 +48,7 @@ class Subscriptions(models.Model):
             
                     
         super().save(*args, **kwargs)  
-
+  
 class SubscriptionsPrice(models.Model): 
     class IntervalChoices(models.TextChoices):
         MONTHLY = "month", "Monthly"
@@ -52,6 +57,13 @@ class SubscriptionsPrice(models.Model):
     stripe_id = models.CharField(max_length=120, null=True, blank=True)
     interval = models.CharField(max_length=120, default=IntervalChoices.MONTHLY, choices=IntervalChoices.choices)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=99.99)
+    order = models.IntegerField(default=-1, help_text="Ordering on Django pricing page")
+    featured = models.BooleanField(default=True, help_text="Featured on Django pricing page") 
+    updated = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['subscription__order', 'order', 'featured', '-updated']
 
     @property
     def stripe_currency(self):
@@ -80,6 +92,12 @@ class SubscriptionsPrice(models.Model):
             )
             self.stripe_id = stripe_id
         super().save(*args, **kwargs)
+        if self.featured and self.subscription:
+            qs = SubscriptionsPrice.objects.filter(
+                subscription=self.subscription, 
+                interval=self.interval   
+            ).exclude(id=self.id)
+            qs.update(featured=False)
 
 class UserSubscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
