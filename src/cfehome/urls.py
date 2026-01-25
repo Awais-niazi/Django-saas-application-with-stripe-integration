@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from . import views
 from auth import views as auth_views
+from subscriptions import views as subscriptions_views
 urlpatterns = [
     path("", views.landing_page_view, name= 'landing_page'),
     path('admin/', admin.site.urls),
-    path('login/', auth_views.login_view),
-    path('register/', auth_views.register_view),
+    #path('login/', auth_views.login_view),
+    #path('register/', auth_views.register_view),
+    path('pricing/', subscriptions_views.subscription_price_view, name='pricing'),
     path('home/', views.home_view, name= 'home_view' ),
     path('about/', views.about_view, name= 'about_views'),
     path('protected/', views.pw_protected_view),
