@@ -1,6 +1,8 @@
 import stripe
 from decouple import config
 
+
+
 DJANGO_DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default=None, cast=str) 
 
@@ -45,3 +47,12 @@ def create_price(
         return response
     stripe_id = response.id
     return stripe_id
+
+
+def start_checkout_session(customer_id, success_url="", cancel_url="", price_stripe_id= "", raw=True):
+    response = stripe.checkout.Session.create(customer= customer_id,cancel_url=cancel_url, success_url=success_url, line_items=[{"price":price_stripe_id, "quantity": 2}], mode="subscription")
+    if not success_url.endswith("?session_id={CHECKOUT_SESSION_ID}"):
+        success_url = f"{success_url}" + "?session_id={CHECKOUT_SESSION_ID}"
+    if raw:
+        return response
+    return response.url
