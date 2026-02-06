@@ -1,8 +1,6 @@
 import stripe
 from decouple import config
 
-
-
 DJANGO_DEBUG = config("DJANGO_DEBUG", default=False, cast=bool)
 STRIPE_SECRET_KEY = config("STRIPE_SECRET_KEY", default=None, cast=str) 
 
@@ -12,10 +10,10 @@ if "sk_test" in STRIPE_SECRET_KEY and not DJANGO_DEBUG:
 stripe.api_key = STRIPE_SECRET_KEY
 
 def create_customer(
-        name="",
-        email="",
-        metadata={},
-        raw=False):
+    name="",
+    email="",
+    metadata={},
+    raw=False):
     response = stripe.Customer.create(
         name=name,
         email=email,
@@ -26,33 +24,128 @@ def create_customer(
     stripe_id = response.id
     return stripe_id    
 
-def create_price(
-        currency="usd",
-        unit_amount="999",
-        interval = "month",
-        recurring={"interval": "month"},
-        product=None,
-        metadata={},
-        raw=False):
-    if product is None:
-        return None
-    response = stripe.Price.create(
-                currency=currency,
-                unit_amount=unit_amount,
-                recurring={"interval": interval},
-                product=product,
-                metadata=metadata,
-            )
+def create_product(
+    name="",
+    metadata={},
+    raw=False):
+    response = stripe.Product.create(
+        name=name,
+        metadata=metadata,
+    )
     if raw:
         return response
     stripe_id = response.id
     return stripe_id
 
+def create_price(
+    currency="usd",
+    unit_amount="999",
+    interval="month",
+    product=None,
+    metadata={},
+    raw=False):
+    if product is None:
+        return None
+    response = stripe.Price.create(
+        currency=currency,
+        unit_amount=unit_amount,
+        recurring={"interval": interval},
+        product=product,
+        metadata=metadata,
+    )
+    if raw:
+        return response
+    stripe_id = response.id
+    return stripe_id
 
-def start_checkout_session(customer_id, success_url="", cancel_url="", price_stripe_id= "", raw=True):
-    response = stripe.checkout.Session.create(customer= customer_id,cancel_url=cancel_url, success_url=success_url, line_items=[{"price":price_stripe_id, "quantity": 2}], mode="subscription")
-    if not success_url.endswith("?session_id={CHECKOUT_SESSION_ID}"):
-        success_url = f"{success_url}" + "?session_id={CHECKOUT_SESSION_ID}"
+def start_checkout_session(
+    customer_id, 
+    success_url="", 
+    cancel_url="", 
+    price_stripe_id="", 
+    existing_subscription_id=None,  # ✅ NEW PARAMETER
+    raw=True):
+    """
+    Create a Stripe checkout session.
+    """
+    # Fix the URL to include session_id
+    if "{CHECKOUT_SESSION_ID}" not in success_url:
+        separator = "&" if "?" in success_url else "?"
+        success_url = f"{success_url}{separator}session_id={{CHECKOUT_SESSION_ID}}"
+    
+    # Build parameters
+    session_params = {
+        'customer': customer_id,
+        'cancel_url': cancel_url,
+        'success_url': success_url,
+        'line_items': [{"price": price_stripe_id, "quantity": 1}],
+        'mode': 'subscription',
+    }
+    
+    # Add metadata if upgrading
+    if existing_subscription_id:
+        session_params['subscription_data'] = {
+            'metadata': {
+                'previous_subscription': existing_subscription_id
+            }
+        }
+    
+    response = stripe.checkout.Session.create(**session_params)
+    
     if raw:
         return response
     return response.url
+
+def get_checkout_session(session_id, raw=True):
+    response = stripe.checkout.Session.retrieve(session_id)
+    if raw:
+        return response
+    return response.url
+
+def get_subscription(stripe_id, raw=True):
+    response = stripe.Subscription.retrieve(stripe_id)
+    if raw:
+        return response
+    return response.id
+
+def get_checkout_customer_plan(session_id):
+    checkout_r = get_checkout_session(session_id, raw=True)
+    customer_id = checkout_r.customer
+    sub_stripe_id = checkout_r.subscription
+    sub_r = get_subscription(sub_stripe_id, raw=True)
+    sub_plan = sub_r.plan
+    return customer_id, sub_plan.id, sub_stripe_id
+
+def cancel_subscription(subscription_id, cancel_at_period_end=False, raw=False):
+    """
+    Cancel a Stripe subscription
+    """
+    try:
+        if cancel_at_period_end:
+            response = stripe.Subscription.modify(
+                subscription_id,
+                cancel_at_period_end=True
+            )
+        else:
+            response = stripe.Subscription.delete(subscription_id)
+        
+        if raw:
+            return response
+        return response.status
+    except stripe.error.InvalidRequestError as e:
+        print(f"Error cancelling subscription {subscription_id}: {e}")
+        if raw:
+            return None
+        return "already_cancelled"
+    except stripe.error.StripeError as e:
+        print(f"Stripe error: {e}")
+        raise
+
+def get_subscription_status(subscription_id):
+    """Get subscription status"""
+    try:
+        subscription = stripe.Subscription.retrieve(subscription_id)
+        return subscription.status
+    except stripe.error.StripeError as e:
+        print(f"Error retrieving subscription: {e}")
+        return None
