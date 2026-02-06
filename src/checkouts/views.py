@@ -7,6 +7,10 @@ from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.http import HttpResponseBadRequest
+import logging  # ✅ Add this
+
+# ✅ Create logger
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 BASE_URL = settings.BASE_URL
@@ -33,28 +37,31 @@ def checkout_redirect_view(request):
     cancel_url = f"{BASE_URL}{pricing_url_path}"
     price_stripe_id = obj.stripe_id
     
-    # ✅ Check if user has an existing subscription
+    # Check for existing subscription
     existing_subscription_id = None
     try:
         existing_user_sub = UserSubscription.objects.get(user=request.user)
         if existing_user_sub.stripe_id and existing_user_sub.active:
             existing_subscription_id = existing_user_sub.stripe_id
+            logger.info(f"User {request.user.email} has existing subscription: {existing_subscription_id}")
     except UserSubscription.DoesNotExist:
-        pass
+        logger.info(f"User {request.user.email} is creating first subscription")
     
-    # Create checkout session (pass existing subscription if upgrading)
     url = helpers.billing.start_checkout_session(
         customer_stripe_id, 
         success_url=success_url, 
         cancel_url=cancel_url, 
         price_stripe_id=price_stripe_id,
-        existing_subscription_id=existing_subscription_id,  # ✅ Pass this
+        existing_subscription_id=existing_subscription_id,
         raw=False
     )
     return redirect(url)
 
 def checkout_finalize_view(request):
     session_id = request.GET.get('session_id')
+    
+    logger.info(f"Processing checkout session: {session_id}")
+    
     customer_id, plan_id, sub_stripe_id = helpers.billing.get_checkout_customer_plan(session_id)
     
     try:
@@ -68,9 +75,10 @@ def checkout_finalize_view(request):
         user_obj = None
     
     if None in [user_obj, sub_obj]:
+        logger.error(f"Invalid session data - session_id: {session_id}, customer: {customer_id}, plan: {plan_id}")
         return HttpResponseBadRequest("Invalid session data.")
     
-    # ✅ CRITICAL FIX: Cancel ALL old subscriptions for this customer
+    # Handle upgrade/downgrade
     is_upgrade = False
     old_subscription = None
     
@@ -81,26 +89,37 @@ def checkout_finalize_view(request):
         
         is_upgrade = old_subscription is not None and old_subscription != sub_obj
         
-        # ✅ Cancel the old subscription if it exists and is different
+        if is_upgrade:
+            logger.info(
+                f"UPGRADE DETECTED - User: {user_obj.email}, "
+                f"From: {old_subscription.name}, "
+                f"To: {sub_obj.name}"
+            )
+        
+        # Cancel old subscription
         if old_stripe_sub_id and old_stripe_sub_id != sub_stripe_id:
             try:
-                print(f"Attempting to cancel old subscription: {old_stripe_sub_id}")
+                logger.info(f"Cancelling old subscription: {old_stripe_sub_id}")
                 result = helpers.billing.cancel_subscription(
                     subscription_id=old_stripe_sub_id,
                     cancel_at_period_end=False,
-                    raw=True  # Get full response to see what happened
+                    raw=True
                 )
                 if result:
-                    print(f"✅ Successfully cancelled: {old_stripe_sub_id}")
-                    print(f"Status: {result.status if hasattr(result, 'status') else 'deleted'}")
+                    logger.info(
+                        f"✅ Successfully cancelled subscription: {old_stripe_sub_id}, "
+                        f"Status: {result.status if hasattr(result, 'status') else 'deleted'}"
+                    )
                 else:
-                    print(f"⚠️ Cancellation returned None for: {old_stripe_sub_id}")
+                    logger.warning(f"Cancellation returned None for: {old_stripe_sub_id}")
             except Exception as e:
-                print(f"❌ ERROR cancelling subscription {old_stripe_sub_id}: {e}")
-                # Log this to your error tracking system
+                logger.error(
+                    f"❌ ERROR cancelling subscription {old_stripe_sub_id}: {e}",
+                    exc_info=True  # This includes the full traceback
+                )
     
     except UserSubscription.DoesNotExist:
-        print("No existing subscription found - this is a new subscription")
+        logger.info(f"New subscription for user: {user_obj.email}")
     
     # Update Django database
     _user_sub_obj, created = UserSubscription.objects.update_or_create(
@@ -110,6 +129,13 @@ def checkout_finalize_view(request):
             "stripe_id": sub_stripe_id,
             "active": True
         }
+    )
+    
+    logger.info(
+        f"Subscription {'created' if created else 'updated'} - "
+        f"User: {user_obj.email}, "
+        f"Plan: {sub_obj.name}, "
+        f"Stripe ID: {sub_stripe_id}"
     )
     
     context = {
