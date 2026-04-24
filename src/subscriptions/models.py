@@ -36,13 +36,18 @@ class Subscriptions(models.Model):
     class Meta:
         permissions = SUBSCRIPTION_PERMISSIONS
 
-    def save(self, *args, **kwargs):         
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
         if not self.stripe_id:
-            stripe_id = helpers.billing.create_product(name=self.name, metadata={"subscription_plan_id": self.id}, raw=False)
-            self.stripe_id = stripe_id
-            
-                    
-        super().save(*args, **kwargs)  
+            stripe_id = helpers.billing.create_product(
+                name=self.name,
+                metadata={"subscription_plan_id": self.id},
+                raw=False,
+            )
+            if stripe_id:
+                self.stripe_id = stripe_id
+                super().save(update_fields=["stripe_id"])
 
 class SubscriptionsPrice(models.Model): 
     class IntervalChoices(models.TextChoices):
@@ -68,18 +73,20 @@ class SubscriptionsPrice(models.Model):
         return self.subscription.stripe_id
     
     def save(self, *args, **kwargs):
-        if (not self.stripe_id and 
-            self.product_stripe_id is not None):
+        super().save(*args, **kwargs)
+
+        if not self.stripe_id and self.product_stripe_id is not None:
             stripe_id = helpers.billing.create_price(
                 currency=self.stripe_currency,
                 unit_amount=self.stripe_price,
                 interval=self.interval,
                 product=self.product_stripe_id,
                 metadata={"subscription_plan_id": self.id},
-                raw=False
+                raw=False,
             )
-            self.stripe_id = stripe_id
-        super().save(*args, **kwargs)
+            if stripe_id:
+                self.stripe_id = stripe_id
+                super().save(update_fields=["stripe_id"])
 
 class UserSubscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
