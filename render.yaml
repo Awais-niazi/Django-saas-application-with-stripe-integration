@@ -23,6 +23,12 @@ services:
           property: connectionString
       - key: CONN_MAX_AGE
         value: 30
+      - key: DJANGO_SECURE_SSL_REDIRECT
+        value: true
+      - key: DJANGO_SECURE_HSTS_SECONDS
+        value: 31536000
+      - key: DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS
+        value: true
       - key: PYTHON_VERSION
         value: 3.12.4
 

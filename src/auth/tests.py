@@ -73,3 +73,16 @@ class AuthViewsTests(TestCase):
         self.assertTrue(
             User.objects.filter(username="newuser", email="newuser@example.com").exists()
         )
+
+    def test_logout_view_logs_user_out(self):
+        user = User.objects.create_user(
+            username="signedin",
+            email="signedin@example.com",
+            password="safe-pass-123",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("logout_view"))
+
+        self.assertRedirects(response, reverse("landing_page"))
+        self.assertNotIn("_auth_user_id", self.client.session)

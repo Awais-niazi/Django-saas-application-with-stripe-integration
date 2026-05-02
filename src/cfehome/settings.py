@@ -2,6 +2,7 @@
 Django settings for cfehome project.
 """
 
+import os
 from importlib import import_module
 from pathlib import Path
 
@@ -19,6 +20,9 @@ SECRET_KEY = config(
     default="django-insecure-local-dev-key-change-me",
 )
 
+if not DEBUG and SECRET_KEY == "django-insecure-local-dev-key-change-me":
+    raise ValueError("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False.")
+
 ALLOWED_HOSTS = config(
     "DJANGO_ALLOWED_HOSTS",
     cast=Csv(),
@@ -32,6 +36,13 @@ CSRF_TRUSTED_ORIGINS = config(
 
 if DEBUG:
     ALLOWED_HOSTS = list(dict.fromkeys([*ALLOWED_HOSTS, "127.0.0.1", "localhost"]))
+
+render_external_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+if render_external_hostname:
+    ALLOWED_HOSTS = list(dict.fromkeys([*ALLOWED_HOSTS, render_external_hostname]))
+    csrf_origin = f"https://{render_external_hostname}"
+    if csrf_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS = [*CSRF_TRUSTED_ORIGINS, csrf_origin]
 
 
 # Email
@@ -149,10 +160,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Django Allauth
 LOGIN_REDIRECT_URL = "home_view"
+LOGOUT_REDIRECT_URL = "landing_page"
 ACCOUNT_LOGIN_METHODS = {"username", "email"}
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_EMAIL_SUBJECT_PREFIX = "[Laxx] "
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https" if not DEBUG else "http"
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
@@ -182,15 +195,28 @@ STATIC_ROOT = BASE_DIR / "local-cdn"
 
 STORAGES = {
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
 
 # Reverse proxy / secure cookies for hosted environments like Render
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = config("DJANGO_SECURE_SSL_REDIRECT", cast=bool, default=not DEBUG)
+SECURE_HSTS_SECONDS = config("DJANGO_SECURE_HSTS_SECONDS", cast=int, default=31536000 if not DEBUG else 0)
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config(
+    "DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS",
+    cast=bool,
+    default=not DEBUG,
+)
+SECURE_HSTS_PRELOAD = config("DJANGO_SECURE_HSTS_PRELOAD", cast=bool, default=False)
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = "same-origin"
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -1,4 +1,5 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth import get_user_model
 
@@ -64,7 +65,12 @@ def register_view(request):
             email=email,
             password=password,
         )
-        login(request, user)
+        login(request, user, backend=settings.AUTHENTICATION_BACKENDS[0])
         return redirect("home_view")
 
     return render(request, "auth/register.html", context)
+
+
+def logout_view(request):
+    logout(request)
+    return redirect("landing_page")

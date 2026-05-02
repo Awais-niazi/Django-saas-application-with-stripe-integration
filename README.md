@@ -54,6 +54,8 @@ Important ones:
 - `DJANGO_DEBUG`
 - `DJANGO_ALLOWED_HOSTS`
 - `DJANGO_CSRF_TRUSTED_ORIGINS`
+- `DJANGO_SECURE_SSL_REDIRECT`
+- `DJANGO_SECURE_HSTS_SECONDS`
 - `DATABASE_URL`
 - `STRIPE_SECRET_KEY`
 
@@ -81,6 +83,8 @@ Render docs I aligned this setup with:
 - The database is also configured as `free` by default for easy one-click setup.
 - As of April 18, 2026, Render’s docs say free Postgres databases expire after 30 days. If you want a longer-lived public demo, change the database plan in `render.yaml` from `free` to `basic-256mb` before deploying.
 - The Blueprint sets `autoDeploy: false` so that people using the Deploy button do not accidentally redeploy their instance whenever this public repo changes. If you use this as your own main Render app, you can turn auto-deploy back on in the Render dashboard.
+- Render automatically provides `RENDER_EXTERNAL_HOSTNAME`; this project now uses that to expand `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` at runtime.
+- For a stricter production setup, enable `DJANGO_SECURE_SSL_REDIRECT=true` and set a non-zero `DJANGO_SECURE_HSTS_SECONDS`.
 
 ### Deploy Button
 
