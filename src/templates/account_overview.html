@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="grid gap-6 lg:grid-cols-2">
+    <article class="soft-panel rounded-[1.8rem] p-6">
+        <p class="page-kicker mb-2">Profile</p>
+        <h2 class="text-3xl font-semibold mb-4">Profile snapshot</h2>
+        <p><strong>Username:</strong> {{ request.user.username }}</p>
+        <p><strong>Email:</strong> {{ request.user.email|default:"Not set" }}</p>
+        <p class="mt-4"><a href="/profiles/{{ request.user.username }}/" class="underline">Open public profile</a></p>
+    </article>
+    <article class="glass-panel rounded-[1.8rem] p-6">
+        <p class="page-kicker mb-2">Customer</p>
+        <h2 class="text-3xl font-semibold mb-4">Customer snapshot</h2>
+        {% if customer %}
+            <p><strong>Email confirmed:</strong> {{ customer.init_email_confirmed }}</p>
+            <p><strong>Stripe customer:</strong> {{ customer.stripe_id|default:"Not created yet" }}</p>
+        {% else %}
+            <p class="muted-copy">No customer record exists yet. This is normal for a new local setup.</p>
+        {% endif %}
+        {% if current_subscription and current_subscription.subscription %}
+            <p class="mt-4"><strong>Current plan:</strong> {{ current_subscription.subscription.name }}</p>
+        {% else %}
+            <p class="mt-4 muted-copy">No active subscription has been assigned.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="mt-8 info-card">
+    <p class="page-kicker mb-2">Support history</p>
+    <h2 class="text-3xl font-semibold mb-4">Recent support requests</h2>
+    {% if support_requests %}
+        <div class="timeline-list">
+            {% for item in support_requests %}
+                <article class="timeline-item">
+                    <h3 class="font-medium">{{ item.subject }}</h3>
+                    <p class="text-sm muted-copy">{{ item.get_status_display }} • {{ item.created_at }}</p>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted-copy">You have not submitted any support requests yet.</p>
+    {% endif %}
+</section>
+{% endblock content %}

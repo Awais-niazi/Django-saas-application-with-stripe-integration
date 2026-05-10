@@ -1,12 +1,72 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    {% include "nav/navbar.html" %}
-    <h1>This is the landing page</h1>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block head_title %}Laxx - Beginner-Friendly SaaS{% endblock head_title %}
+
+{% block content %}
+<section class="hero-shell glass-panel grid gap-8 lg:grid-cols-[1.35fr_0.92fr] items-start">
+    <div class="hero-mesh"></div>
+    <div class="space-y-6">
+        <span class="eyebrow">
+            Beginner-friendly Django SaaS starter
+        </span>
+        <h2 class="display-title font-bold text-[var(--ink)]">Build a polished SaaS without losing the plot.</h2>
+        <p class="lead-copy">
+            Laxx is designed to help you learn SaaS fundamentals without getting lost. It includes clear account flows, subscription ideas, a support inbox, and Render-ready deployment foundations.
+        </p>
+        <div class="spot-grid md:grid-cols-3 md:grid">
+            <div class="spot-card">
+                <span class="page-kicker">Fast start</span>
+                <strong>Auth + account flow</strong>
+                <p class="muted-copy text-sm">Clear sign up, login, dashboard, and account pages.</p>
+            </div>
+            <div class="spot-card">
+                <span class="page-kicker">Revenue path</span>
+                <strong>Pricing + billing</strong>
+                <p class="muted-copy text-sm">A clean place to plug Stripe checkout and webhooks next.</p>
+            </div>
+            <div class="spot-card">
+                <span class="page-kicker">Ops ready</span>
+                <strong>Render deployment</strong>
+                <p class="muted-copy text-sm">Health checks, static files, env config, and secure defaults.</p>
+            </div>
+        </div>
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'register_view' %}" class="btn-primary">Start Free</a>
+            <a href="{% url 'features_view' %}" class="btn-secondary">Explore Features</a>
+        </div>
+    </div>
+    <div class="info-card">
+        <p class="page-kicker mb-2">Product tour</p>
+        <h3 class="text-2xl font-semibold mb-4">What you can learn here</h3>
+        <div class="space-y-4">
+            {% for feature in feature_cards %}
+                <div class="rounded-2xl border border-[rgba(82,54,31,0.08)] bg-white/60 p-4">
+                    <h4 class="font-medium text-[var(--ink)]">{{ feature.title }}</h4>
+                    <p class="text-sm muted-copy">{{ feature.description }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="mt-12">
+    <div class="flex flex-col gap-2 mb-6">
+        <p class="page-kicker">Pricing</p>
+        <h3 class="text-3xl font-semibold">Starter plans with room to grow</h3>
+    </div>
+    <div class="grid gap-4 md:grid-cols-3">
+        {% for plan in plan_cards %}
+            <article class="pricing-card {% if forloop.counter == 2 %}featured{% endif %}">
+                <h4 class="text-xl font-semibold">{{ plan.name }}</h4>
+                <p class="text-4xl font-bold my-3">{{ plan.price }}</p>
+                <p class="muted-copy mb-4">{{ plan.description }}</p>
+                <ul class="list-check text-sm">
+                    {% for feature in plan.features %}
+                        <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock content %}

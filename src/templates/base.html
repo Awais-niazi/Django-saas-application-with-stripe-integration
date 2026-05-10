@@ -18,63 +18,47 @@
             {% include "base/css.html" %}
         {% endblock extra_head %}
     </head>
-    <body class="min-h-screen bg-base-300">
+    <body class="site-frame min-h-screen">
+        <div class="site-content">
         {% include "nav/navbar.html" %}
         
         {% block body %}
+            <main class="max-w-6xl mx-auto px-4 py-8 md:py-10">
             {% if messages %}
                 {% for message in messages %}
                     <div role="alert"
-                         class="text-sm md:text-base alert alert-{{ message.tags }}">
+                         class="glass-panel rounded-2xl text-sm md:text-base alert alert-{{ message.tags }} mb-4 border-0">
                         <span><strong>{{ message }}</strong></span>
                     </div>
                 {% endfor %}
             {% endif %}
             
-            <h1>{{ page_title }}</h1>
+            {% if page_title %}
+                <div class="mb-6">
+                    <p class="page-kicker mb-2">Laxx Workspace</p>
+                    <h1 class="text-4xl font-semibold">{{ page_title }}</h1>
+                </div>
+            {% endif %}
             
             {% block content %}
             {% endblock content %}
             
             {% block layout %}
             {% endblock layout %}
-            
-            <p>{{request.method}} - {{ request.user.is_authenticated }} - {{ request.user }}</p>
-            
-            <div class="mx-auto [&_a]:link text-sm flex flex-col md:flex-row items-center justify-center gap-3 mt-3">
-                {% if user.is_authenticated %}
-                    {% url 'account_email' as email_url %}
-                    {% if email_url %}
-                        <a href="{{ email_url }}">{% trans "Change Email" %}</a>
-                    {% endif %}
-                    {% url 'account_change_password' as change_password_url %}
-                    {% if change_password_url %}
-                        <a href="{{ change_password_url }}">{% trans "Change Password" %}</a>
-                    {% endif %}
-                    {% url 'mfa_index' as mfa_url %}
-                    {% if mfa_url %}
-                        <a href="{{ mfa_url }}">{% trans "Two-Factor Authentication" %}</a>
-                    {% endif %}
-                    {% url 'usersessions_list' as usersessions_list_url %}
-                    {% if usersessions_list_url %}
-                        <a href="{{ usersessions_list_url }}">{% trans "Sessions" %}</a>
-                    {% endif %}
-                    {% url 'account_logout' as logout_url %}
-                    {% if logout_url %}
-                        <a href="{{ logout_url }}">{% trans "Sign Out" %}</a>
-                    {% endif %}
-                {% else %}
-                    {% url 'login_view' as login_url %}
-                    {% if login_url %}
-                        <a href="{{ login_url }}">{% trans "Sign In" %}</a>
-                    {% endif %}
-                    {% url 'register_view' as signup_url %}
-                    {% if signup_url %}
-                        <a href="{{ signup_url }}">{% trans "Sign Up" %}</a>
-                    {% endif %}
-                {% endif %}
-            </div>
+            </main>
+            <footer class="mt-10 border-t border-[rgba(82,54,31,0.12)] bg-[rgba(255,251,245,0.55)] backdrop-blur-sm">
+                <div class="max-w-6xl mx-auto px-4 py-6 text-sm text-[var(--muted)] flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+                    <p>Laxx is a beginner-friendly Django SaaS starter with a warm editorial theme.</p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="{% url 'pricing_view' %}">{% trans "Pricing" %}</a>
+                        <a href="{% url 'support_view' %}">{% trans "Support" %}</a>
+                        <a href="{% url 'privacy_view' %}">{% trans "Privacy" %}</a>
+                        <a href="{% url 'terms_view' %}">{% trans "Terms" %}</a>
+                    </div>
+                </div>
+            </footer>
         {% endblock body %}
+        </div>
         
         {% block extra_body %}
             {% include "base/js.html" %}

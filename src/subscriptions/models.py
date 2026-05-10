@@ -2,6 +2,7 @@ from django.db import models
 from django.dispatch import receiver
 from django.contrib.auth.models import Group, Permission
 from django.db.models.signals import post_save
+from decimal import Decimal
 import helpers.billing
 
 from django.conf import settings
@@ -64,7 +65,7 @@ class SubscriptionsPrice(models.Model):
     
     @property
     def stripe_price(self):
-        return int(self.price * 100)
+        return int(Decimal(self.price) * 100)
 
     @property
     def product_stripe_id(self):
@@ -92,6 +93,7 @@ class UserSubscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     subscription = models.ForeignKey(Subscriptions, on_delete=models.SET_NULL, null=True, blank=True)
     active = models.BooleanField(default=True)
+    stripe_subscription_id = models.CharField(max_length=120, null=True, blank=True)
 
 @receiver(post_save, sender=UserSubscription)
 def user_sub_post_save(sender, instance, *args, **kwargs):

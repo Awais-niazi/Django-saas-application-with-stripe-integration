@@ -1,22 +1,64 @@
 {% extends "base.html" %}
 
-
-
-
 {% block layout %}
+<section class="auth-stage lg:grid-cols-[0.96fr_1.04fr]">
+    <article class="auth-card auth-card--story">
+        <div class="auth-card__inner">
+            <p class="auth-kicker mb-3">Welcome back</p>
+            <h2 class="auth-title mb-4">Sign in to your workspace and keep building.</h2>
+            <p class="auth-copy">
+                Track your dashboard, billing starter flow, support inbox, and account progress from one polished place.
+            </p>
+            <div class="auth-points">
+                <div class="auth-point">
+                    <strong>Faster onboarding</strong>
+                    <span>Jump back into pricing, subscriptions, and support without hunting through the app.</span>
+                </div>
+                <div class="auth-point">
+                    <strong>Beginner-friendly structure</strong>
+                    <span>Everything stays approachable while still looking like a real product.</span>
+                </div>
+            </div>
+        </div>
+    </article>
+    <article class="auth-card auth-card--form">
+        <div class="auth-card__inner">
+            <p class="auth-kicker mb-3">Account access</p>
+            <div class="auth-switch">
+                <a href="{% url 'login_view' %}" class="is-active">Login</a>
+                <a href="{% url 'register_view' %}">Register</a>
+            </div>
 
-{% if error %}
-<p>{{ error }}</p>
-{% endif %}
+            <h2 class="text-3xl font-semibold mt-6">Sign in to Laxx</h2>
+            <p class="auth-copy mt-2">Use your username and password to enter the app.</p>
 
-<form method="POST" action="/login/"> 
-    {% csrf_token %}
-    <input type="text" name="username" placeholder="Username" value="{{ entered_username|default:'' }}">
-    <input type="password" name="password" placeholder="Your Password">
+            {% if error %}
+                <div class="auth-error mt-5">{{ error }}</div>
+            {% endif %}
 
-    <button type= "submit">Login</button>
-     
-</form>
+            <form method="POST" action="/login/" class="auth-form">
+                {% csrf_token %}
+                <div class="auth-field">
+                    <label for="login-username">Username</label>
+                    <div class="auth-input-wrap">
+                        <input id="login-username" class="auth-input" type="text" name="username" placeholder="Enter your username" value="{{ entered_username|default:'' }}">
+                    </div>
+                </div>
 
+                <div class="auth-field">
+                    <label for="login-password">Password</label>
+                    <div class="auth-input-wrap">
+                        <input id="login-password" class="auth-input" type="password" name="password" placeholder="Enter your password">
+                        <button class="auth-toggle" type="button" data-password-toggle="login-password">Show</button>
+                    </div>
+                </div>
 
+                <div class="auth-actions">
+                    <button type="submit" class="btn-primary">Login</button>
+                    <span class="auth-meta">New here? <a class="auth-link" href="{% url 'register_view' %}">Create an account</a></span>
+                </div>
+            </form>
+        </div>
+    </article>
+</section>
 {% endblock layout %}

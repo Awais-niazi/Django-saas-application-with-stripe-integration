@@ -3,36 +3,48 @@
 {% load widget_tweaks %}
 {% block head_title %}{% trans "Sign In" %}{% endblock head_title %}
 {% block content %}
-<div class="max-w-md mx-auto p-6">
-    <h1 class="text-2xl font-semibold mb-4">{% trans "Sign In" %}</h1>
-    {% if not SOCIALACCOUNT_ONLY %}
-        <form method="post" action="{% url 'account_login' %}" class="space-y-4">
-            {% csrf_token %}
-            {% for field in form %}
-                <div>
-                    <label for="{{ field.id_for_label }}" class="block mb-1">{{ field.label }}</label>
-                    {% render_field field class="w-full border rounded px-3 py-2" %}
-                    {% for error in field.errors %}
-                        <p class="text-sm text-red-600 mt-1">{{ error }}</p>
-                    {% endfor %}
-                </div>
-            {% endfor %}
-            {{ redirect_field }}
-            {% if form.non_field_errors %}
-                {% for error in form.non_field_errors %}
-                    <p class="text-sm text-red-600">{{ error }}</p>
-                {% endfor %}
-            {% endif %}
-            <button type="submit" class="px-4 py-2 bg-slate-900 text-white rounded">{% trans "Sign In" %}</button>
-        </form>
-        <p class="mt-4 text-sm">
-            {% blocktranslate %}If you have not created an account yet, then please <a href="{{ signup_url }}">sign up</a> first.{% endblocktranslate %}
-        </p>
-    {% endif %}
-    {% if SOCIALACCOUNT_ENABLED %}
-        <div class="mt-6">
-            {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+<section class="auth-stage lg:grid-cols-[0.95fr_1.05fr]">
+    <article class="auth-card auth-card--story">
+        <div class="auth-card__inner">
+            <p class="auth-kicker mb-3">{% trans "Social login ready" %}</p>
+            <h2 class="auth-title mb-4">{% trans "Use the polished allauth flow when you need it." %}</h2>
+            <p class="auth-copy">{% trans "This card keeps the same visual language as the rest of the app while still supporting allauth and social providers." %}</p>
         </div>
-    {% endif %}
-</div>
+    </article>
+    <article class="auth-card auth-card--form">
+        <div class="auth-card__inner">
+            <p class="auth-kicker mb-3">{% trans "Allauth sign in" %}</p>
+            <h2 class="text-3xl font-semibold">{% trans "Sign In" %}</h2>
+            {% if not SOCIALACCOUNT_ONLY %}
+                <form method="post" action="{% url 'account_login' %}" class="auth-form form-shell">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="auth-field">
+                            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {% render_field field %}
+                            {% for error in field.errors %}
+                                <p class="text-sm text-red-600 mt-1">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    {{ redirect_field }}
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                            <p class="auth-error">{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                    <button type="submit" class="btn-primary">{% trans "Sign In" %}</button>
+                </form>
+                <p class="auth-meta mt-4">
+                    {% blocktranslate %}If you have not created an account yet, then please <a class="auth-link" href="{{ signup_url }}">sign up</a> first.{% endblocktranslate %}
+                </p>
+            {% endif %}
+            {% if SOCIALACCOUNT_ENABLED %}
+                <div class="mt-6">
+                    {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
+                </div>
+            {% endif %}
+        </div>
+    </article>
+</section>
 {% endblock content %}

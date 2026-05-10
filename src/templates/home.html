@@ -1,12 +1,65 @@
 {% extends "base.html" %}
 
-
 {% block layout %}
-<p>Welcome aboard!</p>
-{% csrf_token %}
+<section class="grid gap-4 md:grid-cols-3">
+    <article class="kpi-card">
+        <p class="page-kicker mb-2">Identity</p>
+        <h2 class="font-semibold text-[var(--ink)]">Signed in</h2>
+        <p class="muted-copy mt-2">
+            {% if request.user.is_authenticated %}
+                Welcome back, {{ request.user.username }}.
+            {% else %}
+                You are browsing as a guest.
+            {% endif %}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="page-kicker mb-2">Analytics</p>
+        <h2 class="font-semibold text-[var(--ink)]">Current page visits</h2>
+        <p class="kpi-value mt-2">{{ current_path_visits }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="page-kicker mb-2">Reach</p>
+        <h2 class="font-semibold text-[var(--ink)]">Total visits tracked</h2>
+        <p class="kpi-value mt-2">{{ total_visits }}</p>
+    </article>
+</section>
 
-{% include 'welcome-user-msg.html'%}
-<p>Page Visits: {{ queryset }}</p>
-<p>Total Vists: {{ total_page_count }}</p>
-<p>Percentage of visiting the page: {{ percentage }}</p>
+<section class="mt-8 grid gap-6 lg:grid-cols-[1.3fr_1fr]">
+    <div class="glass-panel rounded-[1.8rem] p-6">
+        <p class="page-kicker mb-2">Workspace</p>
+        <h2 class="text-3xl font-semibold mb-4">Your beginner SaaS checklist</h2>
+        <div class="grid gap-3 md:grid-cols-2">
+            <a href="{% url 'onboarding_view' %}" class="feature-card">
+                <h3 class="font-medium">Onboarding</h3>
+                <p class="text-sm muted-copy mt-1">Learn the app in a guided order.</p>
+            </a>
+            <a href="{% url 'account_overview_view' %}" class="feature-card">
+                <h3 class="font-medium">Account</h3>
+                <p class="text-sm muted-copy mt-1">See profile, customer, and support details.</p>
+            </a>
+            <a href="{% url 'billing_overview_view' %}" class="feature-card">
+                <h3 class="font-medium">Billing</h3>
+                <p class="text-sm muted-copy mt-1">Understand the Stripe and subscription scaffolding.</p>
+            </a>
+            <a href="{% url 'support_view' %}" class="feature-card">
+                <h3 class="font-medium">Support</h3>
+                <p class="text-sm muted-copy mt-1">Send a real support request into the admin.</p>
+            </a>
+        </div>
+    </div>
+    <div class="soft-panel rounded-[1.8rem] p-6">
+        <p class="page-kicker mb-2">Revenue</p>
+        <h2 class="text-3xl font-semibold mb-4">Current subscription</h2>
+        {% if current_subscription and current_subscription.subscription %}
+            <p class="text-lg font-medium">{{ current_subscription.subscription.name }}</p>
+            <p class="text-sm muted-copy mt-2">This user has a linked subscription record.</p>
+        {% else %}
+            <p class="muted-copy">No subscription is assigned yet. Use this as a safe starter state while building the paid flow.</p>
+        {% endif %}
+        {% if customer %}
+            <p class="text-sm muted-copy mt-4">Customer record exists{% if customer.stripe_id %} with Stripe ID {{ customer.stripe_id }}{% endif %}.</p>
+        {% endif %}
+    </div>
+</section>
 {% endblock layout %}

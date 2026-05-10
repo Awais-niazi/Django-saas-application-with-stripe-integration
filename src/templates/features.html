@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-shell soft-panel mb-8">
+    <p class="page-kicker mb-2">Capabilities</p>
+    <h2 class="text-4xl font-semibold mb-4">A friendlier way to explore the moving parts of a SaaS app.</h2>
+    <p class="lead-copy">Instead of hiding the architecture, Laxx turns the important product areas into pages you can click through, restyle, and extend.</p>
+</section>
+<section class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+    {% for feature in feature_cards %}
+        <article class="feature-card">
+            <h2 class="text-xl font-semibold mb-2">{{ feature.title }}</h2>
+            <p class="muted-copy">{{ feature.description }}</p>
+        </article>
+    {% endfor %}
+</section>
+
+<section class="mt-10 info-card">
+    <h2 class="text-3xl font-semibold mb-4">What this starter gives you</h2>
+    <ul class="list-check">
+        <li>Authentication pages that are easy to read and customize.</li>
+        <li>Subscription models and Stripe helper functions to build on.</li>
+        <li>Support requests saved in the database for admin follow-up.</li>
+        <li>Account, billing, onboarding, privacy, and terms pages so the product feels complete.</li>
+        <li>Render-friendly deployment scripts and health checks for production basics.</li>
+    </ul>
+</section>
+{% endblock content %}

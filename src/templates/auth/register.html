@@ -1,23 +1,71 @@
 {% extends "base.html" %}
 
-
-
-
 {% block layout %}
+<section class="auth-stage lg:grid-cols-[1.02fr_0.98fr]">
+    <article class="auth-card auth-card--form">
+        <div class="auth-card__inner">
+            <p class="auth-kicker mb-3">Create your account</p>
+            <div class="auth-switch">
+                <a href="{% url 'login_view' %}">Login</a>
+                <a href="{% url 'register_view' %}" class="is-active">Register</a>
+            </div>
 
-{% if error %}
-<p>{{ error }}</p>
-{% endif %}
+            <h2 class="text-3xl font-semibold mt-6">Start your SaaS workspace</h2>
+            <p class="auth-copy mt-2">Create an account and you’ll land right inside the dashboard.</p>
 
-<form method="POST" action="/register/"> 
-    {% csrf_token %}
-    <input type="text" name="username" placeholder="Pick your Username" value="{{ entered_username|default:'' }}">
-    <input type="email" name="email" placeholder="Your Email" value="{{ entered_email|default:'' }}">
-    <input type="password" name="password" placeholder="Your Password">
+            {% if error %}
+                <div class="auth-error mt-5">{{ error }}</div>
+            {% endif %}
 
-    <button type= "submit">Register</button>
-     
-</form>
+            <form method="POST" action="/register/" class="auth-form">
+                {% csrf_token %}
+                <div class="auth-field">
+                    <label for="register-username">Username</label>
+                    <div class="auth-input-wrap">
+                        <input id="register-username" class="auth-input" type="text" name="username" placeholder="Pick your username" value="{{ entered_username|default:'' }}">
+                    </div>
+                </div>
 
+                <div class="auth-field">
+                    <label for="register-email">Email</label>
+                    <div class="auth-input-wrap">
+                        <input id="register-email" class="auth-input" type="email" name="email" placeholder="you@example.com" value="{{ entered_email|default:'' }}">
+                    </div>
+                </div>
 
+                <div class="auth-field">
+                    <label for="register-password">Password</label>
+                    <div class="auth-input-wrap">
+                        <input id="register-password" class="auth-input" type="password" name="password" placeholder="Create a strong password">
+                        <button class="auth-toggle" type="button" data-password-toggle="register-password">Show</button>
+                    </div>
+                </div>
+
+                <div class="auth-actions">
+                    <button type="submit" class="btn-primary">Register</button>
+                    <span class="auth-meta">Already have an account? <a class="auth-link" href="{% url 'login_view' %}">Sign in</a></span>
+                </div>
+            </form>
+        </div>
+    </article>
+    <article class="auth-card auth-card--story">
+        <div class="auth-card__inner">
+            <p class="auth-kicker mb-3">What you unlock</p>
+            <h2 class="auth-title mb-4">A stylish starter with real product flows.</h2>
+            <p class="auth-copy">
+                Registration drops you into a dashboard with pricing, billing scaffolding, support requests, and deployment-ready foundations already in place.
+            </p>
+            <div class="auth-points">
+                <div class="auth-point">
+                    <strong>Account and profile pages</strong>
+                    <span>Start exploring the customer, profile, and subscription relationships immediately.</span>
+                </div>
+                <div class="auth-point">
+                    <strong>Support and operations</strong>
+                    <span>Use the support flow, health check, and Render-ready setup as your next learning steps.</span>
+                </div>
+            </div>
+        </div>
+    </article>
+</section>
 {% endblock layout %}

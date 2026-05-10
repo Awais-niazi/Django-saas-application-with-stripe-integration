@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero-shell glass-panel">
+    <p class="page-kicker mb-2">Checkout complete</p>
+    <h2 class="text-4xl font-semibold mb-4">Your Stripe checkout was completed.</h2>
+    <p class="lead-copy">
+        Stripe has redirected you back successfully. If your webhook is configured, your local subscription record will sync automatically.
+    </p>
+    {% if session_id %}
+        <p class="auth-meta mt-5">Checkout Session ID: <strong>{{ session_id }}</strong></p>
+    {% endif %}
+    <div class="mt-6 flex flex-wrap gap-3">
+        <a href="{% url 'billing_overview_view' %}" class="btn-primary">Back to billing</a>
+        <a href="{% url 'dashboard_view' %}" class="btn-secondary">Open dashboard</a>
+    </div>
+</section>
+{% endblock content %}

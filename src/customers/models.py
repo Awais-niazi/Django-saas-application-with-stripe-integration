@@ -11,15 +11,53 @@ class Customer(models.Model):
    
     def __str__(self):
         return f"{self.user.username}"
+
+    @property
+    def can_use_stripe(self):
+        return bool(self.user.email)
     
     def save(self, *args, **kwargs):         
+        created_stripe_id = False
         if not self.stripe_id:
-            if self.init_email_confirmed and self.init_email:
+            if self.can_use_stripe:
                 email = self.user.email
-                if email != "" and email is not None:
-                    stripe_id = helpers.billing.create_customer(email=email, metadata={"user_id": self.user.id, "username": self.user.username}, raw=False)
-                    self.stripe_id = stripe_id
+                stripe_id = helpers.billing.create_customer(
+                    email=email,
+                    metadata={"user_id": self.user.id, "username": self.user.username},
+                    raw=False,
+                )
+                self.stripe_id = stripe_id
+                created_stripe_id = bool(stripe_id)
+        update_fields = kwargs.get("update_fields")
+        if created_stripe_id and update_fields:
+            kwargs["update_fields"] = list(dict.fromkeys([*update_fields, "stripe_id"]))
         super().save(*args, **kwargs)  
+
+
+class SupportRequest(models.Model):
+    class StatusChoices(models.TextChoices):
+        NEW = "new", "New"
+        IN_PROGRESS = "in_progress", "In Progress"
+        RESOLVED = "resolved", "Resolved"
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    name = models.CharField(max_length=120)
+    email = models.EmailField()
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    status = models.CharField(
+        max_length=20,
+        choices=StatusChoices.choices,
+        default=StatusChoices.NEW,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.subject} ({self.email})"
 
 
 def allauth_user_signed_up_handler(request, user, *args, **kwargs):

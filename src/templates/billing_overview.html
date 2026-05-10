@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="grid gap-6 lg:grid-cols-2">
+    <article class="soft-panel rounded-[1.8rem] p-6">
+        <p class="page-kicker mb-2">Billing state</p>
+        <h2 class="text-3xl font-semibold mb-4">Billing status</h2>
+        {% if has_active_subscription %}
+            <div class="rounded-2xl border border-[rgba(31,138,112,0.18)] bg-[rgba(31,138,112,0.08)] p-4">
+                <p class="text-sm uppercase tracking-[0.16em] text-[var(--success)]">Active subscription</p>
+                <p class="text-3xl font-semibold mt-2">{{ current_subscription.subscription.name }}</p>
+                {% if current_subscription.stripe_subscription_id %}
+                    <p class="muted-copy mt-2">Stripe subscription ID: {{ current_subscription.stripe_subscription_id }}</p>
+                {% endif %}
+            </div>
+        {% else %}
+            <div class="rounded-2xl border border-[rgba(82,54,31,0.08)] bg-white/60 p-4">
+                <p class="text-sm uppercase tracking-[0.16em] text-[var(--accent-dark)]">No active plan</p>
+                <p class="muted-copy mt-2">Complete a Stripe checkout below and your local subscription will sync here after the webhook lands.</p>
+            </div>
+        {% endif %}
+        <p class="mt-4 muted-copy">This page is designed to make the Stripe flow obvious: choose a plan, finish checkout, let the webhook sync, then use the billing portal for self-serve account changes.</p>
+    </article>
+    <article class="glass-panel rounded-[1.8rem] p-6">
+        <p class="page-kicker mb-2">Payments</p>
+        <h2 class="text-3xl font-semibold mb-4">Stripe starter state</h2>
+        {% if customer and customer.stripe_id %}
+            <p><strong>Customer ID:</strong> {{ customer.stripe_id }}</p>
+            <div class="mt-5 flex flex-wrap gap-3">
+                <a href="{% url 'billing_portal_view' %}" class="btn-secondary">Open billing portal</a>
+                <a href="{% url 'pricing_view' %}" class="btn-secondary">Compare plans</a>
+            </div>
+        {% else %}
+            <p class="muted-copy">No Stripe customer exists yet. Set `STRIPE_SECRET_KEY` and complete account confirmation to start that flow.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="mt-8 info-card">
+    <p class="page-kicker mb-2">Checkout flow</p>
+    <h2 class="text-3xl font-semibold mb-5">Choose a subscription plan</h2>
+    {% if stripe_configured %}
+        <div class="grid gap-4 md:grid-cols-2">
+            {% for price in available_prices %}
+                <article class="pricing-card">
+                    <h3 class="text-2xl font-semibold">{{ price.subscription.name }}</h3>
+                    <p class="text-3xl font-bold my-2">${{ price.price }}</p>
+                    <p class="muted-copy mb-4">{{ price.get_interval_display }} billing through Stripe Checkout.</p>
+                    {% if has_active_subscription and current_subscription.subscription_id == price.subscription_id %}
+                        <div class="rounded-xl border border-[rgba(31,138,112,0.18)] bg-[rgba(31,138,112,0.08)] px-4 py-3 mb-4 text-sm text-[var(--success)]">
+                            This is your current plan family.
+                        </div>
+                    {% endif %}
+                    <form method="post" action="{% url 'create_checkout_session_view' price.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-primary">
+                            {% if has_active_subscription %}
+                                Switch with Stripe
+                            {% else %}
+                                Checkout with Stripe
+                            {% endif %}
+                        </button>
+                    </form>
+                </article>
+            {% empty %}
+                <p class="muted-copy">No subscription prices exist yet. Create plans in Django admin first.</p>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted-copy">Stripe is not configured yet. Add your Stripe keys and webhook secret to unlock hosted checkout and the billing portal.</p>
+    {% endif %}
+</section>
+{% endblock content %}

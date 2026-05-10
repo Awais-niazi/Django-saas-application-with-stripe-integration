@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="soft-panel rounded-[1.8rem] p-8">
+    <p class="page-kicker mb-2">Checkout cancelled</p>
+    <h2 class="text-4xl font-semibold mb-4">You cancelled the Stripe checkout flow.</h2>
+    <p class="lead-copy">Nothing was changed. You can review the plans again whenever you're ready.</p>
+    <div class="mt-6 flex flex-wrap gap-3">
+        <a href="{% url 'billing_overview_view' %}" class="btn-primary">Return to billing</a>
+        <a href="{% url 'pricing_view' %}" class="btn-secondary">View pricing</a>
+    </div>
+</section>
+{% endblock content %}

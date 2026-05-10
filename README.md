@@ -17,6 +17,17 @@ The project is set up to be a strong learning repo first:
 - basic page visit tracking
 - WhiteNoise static file serving
 - Render blueprint config in [render.yaml](render.yaml)
+- beginner-friendly landing, pricing, onboarding, account, billing, support, privacy, and terms pages
+- support requests stored in the database and visible in Django admin
+
+## Beginner-Friendly SaaS Areas
+
+- Authentication: sign up, sign in, sign out, email/account flows
+- Account management: profile pages, account overview, support history
+- Subscriptions: starter plan display and subscription model scaffolding
+- Billing: billing overview and Stripe-ready customer/subscription records
+- Support: customer support form backed by the database
+- Operations: health check, static files, Render deployment scripts, environment-based settings
 
 ## Local Setup
 
@@ -58,6 +69,8 @@ Important ones:
 - `DJANGO_SECURE_HSTS_SECONDS`
 - `DATABASE_URL`
 - `STRIPE_SECRET_KEY`
+- `STRIPE_PUBLISHABLE_KEY`
+- `STRIPE_WEBHOOK_SECRET`
 
 ## Deploy on Render
 
@@ -93,5 +106,7 @@ Render docs I aligned this setup with:
 ## Project Notes
 
 - Stripe is optional at startup. If `STRIPE_SECRET_KEY` is not set, the app will still boot.
+- For the hosted Stripe flow, create your plans and prices in Django admin, then configure `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, and `STRIPE_WEBHOOK_SECRET`.
+- Point your Stripe webhook endpoint to `/webhooks/stripe/` and subscribe to `checkout.session.completed`, `customer.subscription.updated`, and `customer.subscription.deleted`.
 - This repo is meant as a learning/demo project, not a hardened production SaaS.
 - Some billing flows are still incomplete and should be treated as educational scaffolding.
